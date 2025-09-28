@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Key Ngày Hôm Nay Là</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ffe0ec, #c3f2ff);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+    .loading-container {
+      text-align: center;
+      padding: 30px;
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      width: 90vw; max-width: 420px;
+      border: 2px solid #fff;
+      animation: glassPulse 3s infinite ease-in-out;
+    }
+    @keyframes glassPulse { 0%,100%{border-color:#00f2fe;} 50%{border-color:#ff6ec4;} }
+    h1 { color:#00c3ff;font-size:32px;margin-bottom:10px;font-weight:bold;text-shadow:1px 1px 2px rgba(0,0,0,0.1);}
+    h3 { color:#333;font-size:20px;margin-bottom:5px; }
+    #dateDisplay { font-size:17px;color:#444;margin-bottom:20px; }
+    .key-container { display:flex;flex-direction:column;align-items:center; }
+    input {
+      text-align:center;width:85%;padding:14px;margin-bottom:20px;
+      border:2px solid #ff7eb9;border-radius:12px;font-size:16px;
+      background:rgba(255,255,255,0.6);box-shadow:0 2px 10px rgba(0,0,0,0.1);
+      color:#333;transition:0.3s ease;
+    }
+    input:hover,input:focus {border-color:#ff006e;outline:none;}
+    button {
+      background:linear-gradient(135deg,#ff6ec4,#7873f5);color:#fff;
+      padding:12px 30px;border:none;border-radius:30px;cursor:pointer;
+      font-size:16px;box-shadow:0 5px 15px rgba(0,0,0,0.2);transition:all 0.3s ease;
+    }
+    button:hover { transform:scale(1.05);box-shadow:0 6px 20px rgba(0,0,0,0.3);}
+    .footer { margin-top:20px;font-size:14px;color:#444;}
+    .admin-link {color:#8a2be2;text-decoration:none;font-weight:bold;transition:color 0.3s ease;}
+    .admin-link:hover {color:#ff4ecd;}
+    .toast {
+      position:fixed;top:20px;right:20px;background:#ffffffcc;color:#111;
+      padding:12px 20px;border-radius:14px;border:2px solid transparent;
+      background-clip:padding-box;font-size:16px;font-weight:bold;z-index:9999;
+      backdrop-filter:blur(10px);box-shadow:0 0 15px rgba(0,255,0,0.3),0 0 30px rgba(0,255,0,0.2);
+      opacity:0;transform:translateY(-20px);transition:opacity 0.5s ease,transform 0.5s ease;
+      background-image:linear-gradient(white,white),linear-gradient(120deg,#00ff88,#00c3ff,#00ff88);
+      background-origin:border-box;background-clip:padding-box,border-box;
+    }
+    .toast.show { opacity:1;transform:translateY(0);}
+    .copy-success-popup {
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:white;border:2px solid #00ff88;padding:30px;border-radius:20px;
+      box-shadow:0 0 30px rgba(0,255,136,0.5);text-align:center;z-index:10000;
+      display:none;opacity:0;transition:opacity 0.3s ease;min-width:280px;
+    }
+    .copy-success-popup.show { display:block;opacity:1; }
+    .checkmark { width:80px;height:80px;stroke:#00cc66;stroke-width:4;stroke-miterlimit:10;margin:auto;display:block; }
+    .checkmark-circle { stroke-dasharray:166;stroke-dashoffset:166;stroke:#00cc66;animation:strokeCircle 0.6s ease-out forwards; }
+    .checkmark-check { stroke-dasharray:48;stroke-dashoffset:48;stroke:#00cc66;animation:strokeCheck 0.3s ease-out 0.6s forwards; }
+    @keyframes strokeCircle { to {stroke-dashoffset:0;} }
+    @keyframes strokeCheck { to {stroke-dashoffset:0;} }
+  </style>
+</head>
+<body>
+  <div class="loading-container">
+    <h1>Key Ngày Là</h1>
+    <h3>Time: <span id="clock"></span></h3>
+    <div id="dateDisplay" style="margin-top: 10px; font-size: 18px; color: #555;"></div>
+    <br>
+    <div class="key-container">
+      <input type="text" id="keyInput" readonly>
+      <button onclick="copyToClipboard()">Copy Key</button>
+    </div>
+    <div class="footer">
+      <b>Web được tạo bởi 
+        <a href="https://www.facebook.com/share/14HnBUyuKR4/?mibextid=wwXIfr" class="admin-link">Trung IOS</a> 
+      </b>
+    </div>
+  </div>
+  <div class="copy-success-popup" id="copySuccessPopup">
+    <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+      <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+      <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+    </svg>
+    <h3>Thành công</h3>
+    <p>Đã copy key. Hãy vào tool, dán key và test tool thôi!</p>
+  </div>
+  <div class="toast" id="thankYouToast">Cảm ơn đã lấy key ❤️</div>
+
+  <script>
+    function updateTime() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var seconds = now.getSeconds();
+      var day = now.getDate();
+      var month = now.getMonth() + 1;
+      var year = now.getFullYear();
+      hours = (hours < 10 ? "0" : "") + hours;
+      minutes = (minutes < 10 ? "0" : "") + minutes;
+      seconds = (seconds < 10 ? "0" : "") + seconds;
+      document.getElementById("clock").innerHTML = `${hours}:${minutes}:${seconds}`;
+      document.getElementById("dateDisplay").innerHTML = `Hôm nay là ngày  ${day}/${month}/${year}`;
+      document.title = `Key Ngày ${day}/${month}/${year} Là`;
+      setTimeout(updateTime, 1000);
+    }
+    function getQueryParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const key = urlParams.get('ma');
+      const keyInput = document.getElementById('keyInput');
+      keyInput.value = key ? key : 'No key found';
+    }
+    window.onload = function () {
+      updateTime();
+      getQueryParam();
+      const toast = document.getElementById('thankYouToast');
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    };
+    function copyToClipboard() {
+      const keyInput = document.getElementById("keyInput");
+      keyInput.select();
+      keyInput.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(keyInput.value).then(() => {
+        showCopyPopup();
+      });
+    }
+    function showCopyPopup() {
+      const popup = document.getElementById("copySuccessPopup");
+      const circle = popup.querySelector(".checkmark-circle");
+      const check = popup.querySelector(".checkmark-check");
+      circle.style.strokeDashoffset = 166;
+      check.style.strokeDashoffset = 48;
+      circle.style.animation = "none";
+      check.style.animation = "none";
+      void circle.offsetWidth; void check.offsetWidth;
+      popup.classList.add("show");
+      circle.style.animation = "strokeCircle 0.6s ease-out forwards";
+      check.style.animation = "strokeCheck 0.3s ease-out 0.6s forwards";
+      setTimeout(() => { popup.classList.remove("show"); }, 3000);
+    }
+  </script>
+</body>
+</html>
